@@ -1,0 +1,10 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "paths": {
+      "@kalkulator-finance/shared": ["../../packages/shared/src/index.ts"],
+      "@kalkulator-finance/finance-core": ["../../packages/finance-core/src/index.ts"]
+    }
+  },
+  "include": ["src", "vite.config.ts"]
+}

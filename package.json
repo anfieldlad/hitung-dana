@@ -1,0 +1,11 @@
+{
+  "name": "kalkulator-finance",
+  "private": true,
+  "packageManager": "pnpm@10.11.0",
+  "scripts": {
+    "dev": "corepack pnpm --filter @kalkulator-finance/web dev",
+    "build": "corepack pnpm -r --if-present build",
+    "check": "corepack pnpm -r --if-present check",
+    "test": "corepack pnpm -r --if-present test"
+  }
+}
