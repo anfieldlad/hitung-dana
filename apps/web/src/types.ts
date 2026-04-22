@@ -1,5 +1,7 @@
 export type FormState = {
+  downPayment: string;
   principal: string;
+  propertyPrice: string;
   tenorYears: string;
   yearlyInterestRates: string[];
 };

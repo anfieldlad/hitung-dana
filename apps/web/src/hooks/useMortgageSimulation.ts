@@ -6,6 +6,8 @@ import type { MortgageSimulationResult } from "@kalkulator-finance/shared";
 import {
   buildInitialFormState,
   buildSummary,
+  derivePrincipal,
+  formatDerivedPrincipal,
   formatRupiahInput,
   isFormReady,
   parseFormState,
@@ -15,15 +17,22 @@ import {
 import type { FormState } from "../types";
 
 type UseMortgageSimulationResult = {
-  errorMessage: string | null;
+  applyCalculatedPrincipal: () => void;
+  derivedPrincipalError: string | null;
   formIsReady: boolean;
   formState: FormState;
+  formattedCalculatedPrincipal: string | null;
+  formattedDownPayment: string;
   formattedPrincipal: string;
+  formattedPropertyPrice: string;
+  errorMessage: string | null;
   result: MortgageSimulationResult | null;
   summary: ReturnType<typeof buildSummary>;
   tenorNumber: number;
   handleSubmit: (event: React.FormEvent<HTMLFormElement>) => void;
+  updateDownPayment: (value: string) => void;
   updatePrincipal: (value: string) => void;
+  updatePropertyPrice: (value: string) => void;
   updateTenor: (value: string) => void;
   updateYearlyRate: (index: number, value: string) => void;
 };
@@ -35,9 +44,23 @@ export function useMortgageSimulation(): UseMortgageSimulationResult {
 
   const tenorNumber = useMemo(() => Number(formState.tenorYears) || 0, [formState.tenorYears]);
   const summary = useMemo(() => (result ? buildSummary(result) : null), [result]);
+  const derivedPrincipal = useMemo(() => derivePrincipal(formState), [formState]);
+
+  const formattedCalculatedPrincipal = useMemo(
+    () => formatDerivedPrincipal(derivedPrincipal.value),
+    [derivedPrincipal.value]
+  );
+  const formattedDownPayment = useMemo(
+    () => formatRupiahInput(formState.downPayment),
+    [formState.downPayment]
+  );
   const formattedPrincipal = useMemo(
     () => formatRupiahInput(formState.principal),
     [formState.principal]
+  );
+  const formattedPropertyPrice = useMemo(
+    () => formatRupiahInput(formState.propertyPrice),
+    [formState.propertyPrice]
   );
   const formIsReady = useMemo(() => isFormReady(formState), [formState]);
 
@@ -58,10 +81,24 @@ export function useMortgageSimulation(): UseMortgageSimulationResult {
     });
   }, [tenorNumber]);
 
+  function updateDownPayment(value: string) {
+    setFormState((current) => ({
+      ...current,
+      downPayment: sanitizeNumberInput(value)
+    }));
+  }
+
   function updatePrincipal(value: string) {
     setFormState((current) => ({
       ...current,
       principal: sanitizeNumberInput(value)
+    }));
+  }
+
+  function updatePropertyPrice(value: string) {
+    setFormState((current) => ({
+      ...current,
+      propertyPrice: sanitizeNumberInput(value)
     }));
   }
 
@@ -92,22 +129,40 @@ export function useMortgageSimulation(): UseMortgageSimulationResult {
       setResult(simulateMortgage(parsedInput));
       setErrorMessage(null);
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Simulasi gagal diproses.";
+      const message = error instanceof Error ? error.message : "We couldn't create the payment table.";
       setResult(null);
       setErrorMessage(message);
     }
   }
 
+  function applyCalculatedPrincipal() {
+    if (derivedPrincipal.value === null) {
+      return;
+    }
+
+    setFormState((current) => ({
+      ...current,
+      principal: String(derivedPrincipal.value)
+    }));
+  }
+
   return {
-    errorMessage,
+    applyCalculatedPrincipal,
+    derivedPrincipalError: derivedPrincipal.error,
     formIsReady,
     formState,
+    formattedCalculatedPrincipal,
+    formattedDownPayment,
     formattedPrincipal,
+    formattedPropertyPrice,
+    errorMessage,
     result,
     summary,
     tenorNumber,
     handleSubmit,
+    updateDownPayment,
     updatePrincipal,
+    updatePropertyPrice,
     updateTenor,
     updateYearlyRate
   };

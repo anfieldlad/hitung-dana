@@ -2,9 +2,15 @@ import type { FormEvent } from "react";
 
 import {
   ACTION_HELPER_TEXT,
+  ADVANCED_OPTIONS_DESCRIPTION,
+  ADVANCED_OPTIONS_TITLE,
+  CALCULATED_PRINCIPAL_LABEL,
+  DOWN_PAYMENT_LABEL,
   FORM_DESCRIPTION,
   FORM_TITLE,
+  PROPERTY_PRICE_LABEL,
   SUBMIT_LABEL,
+  USE_CALCULATED_PRINCIPAL_LABEL,
   YEARLY_RATES_COUNT_NOTE,
   YEARLY_RATES_EMPTY_MESSAGE,
   YEARLY_RATES_READY_MESSAGE,
@@ -13,46 +19,69 @@ import {
 import type { FormState } from "../types";
 
 type SimulationFormProps = {
+  derivedPrincipalError: string | null;
   errorMessage: string | null;
+  formattedCalculatedPrincipal: string | null;
+  formattedDownPayment: string;
   formattedPrincipal: string;
+  formattedPropertyPrice: string;
   formState: FormState;
   isFormReady: boolean;
+  scenarioLabel: string;
   tenorNumber: number;
+  variant?: "comparison" | "primary";
+  onApplyCalculatedPrincipal: () => void;
+  onDownPaymentChange: (value: string) => void;
   onPrincipalChange: (value: string) => void;
+  onPropertyPriceChange: (value: string) => void;
   onSubmit: (event: FormEvent<HTMLFormElement>) => void;
   onTenorChange: (value: string) => void;
   onYearlyRateChange: (index: number, value: string) => void;
 };
 
 export function SimulationForm({
+  derivedPrincipalError,
   errorMessage,
+  formattedCalculatedPrincipal,
+  formattedDownPayment,
   formattedPrincipal,
+  formattedPropertyPrice,
   formState,
   isFormReady,
+  scenarioLabel,
   tenorNumber,
+  variant = "primary",
+  onApplyCalculatedPrincipal,
+  onDownPaymentChange,
   onPrincipalChange,
+  onPropertyPriceChange,
   onSubmit,
   onTenorChange,
   onYearlyRateChange
 }: SimulationFormProps) {
+  const cardClassName =
+    variant === "comparison" ? "card form-card comparison-form-card" : "card form-card";
+
   return (
-    <section className="card form-card">
+    <section className={cardClassName}>
       <form onSubmit={onSubmit}>
         <div className="section-head">
           <div>
-            <h2>{FORM_TITLE}</h2>
+            <h2>
+              {FORM_TITLE}: <span className="section-tag">{scenarioLabel}</span>
+            </h2>
             <p>{FORM_DESCRIPTION}</p>
           </div>
         </div>
 
         <div className="field-grid">
           <label className="field">
-            <span>Principal</span>
+            <span>Loan Amount</span>
             <div className="currency-input">
               <span className="currency-prefix">Rp</span>
               <input
                 inputMode="numeric"
-                placeholder="Example: 500,000,000"
+                placeholder="For example: 500,000,000"
                 type="text"
                 value={formattedPrincipal}
                 onChange={(event) => onPrincipalChange(event.target.value)}
@@ -61,12 +90,12 @@ export function SimulationForm({
           </label>
 
           <label className="field">
-            <span>Term (Years)</span>
+            <span>Loan Term (Years)</span>
             <input
               inputMode="numeric"
               min="1"
               step="1"
-              placeholder="Example: 15"
+              placeholder="For example: 15"
               type="number"
               value={formState.tenorYears}
               onChange={(event) => onTenorChange(event.target.value)}
@@ -76,6 +105,55 @@ export function SimulationForm({
             ) : null}
           </label>
         </div>
+
+        <details className="advanced-panel">
+          <summary>{ADVANCED_OPTIONS_TITLE}</summary>
+          <p className="advanced-description">{ADVANCED_OPTIONS_DESCRIPTION}</p>
+
+          <div className="field-grid">
+            <label className="field">
+              <span>{PROPERTY_PRICE_LABEL}</span>
+              <div className="currency-input">
+                <span className="currency-prefix">Rp</span>
+                <input
+                  inputMode="numeric"
+                  placeholder="For example: 800,000,000"
+                  type="text"
+                  value={formattedPropertyPrice}
+                  onChange={(event) => onPropertyPriceChange(event.target.value)}
+                />
+              </div>
+            </label>
+
+            <label className="field">
+              <span>{DOWN_PAYMENT_LABEL}</span>
+              <div className="currency-input">
+                <span className="currency-prefix">Rp</span>
+                <input
+                  inputMode="numeric"
+                  placeholder="For example: 200,000,000"
+                  type="text"
+                  value={formattedDownPayment}
+                  onChange={(event) => onDownPaymentChange(event.target.value)}
+                />
+              </div>
+            </label>
+          </div>
+
+          {formattedCalculatedPrincipal ? (
+            <div className="advanced-result">
+              <div>
+                <span>{CALCULATED_PRINCIPAL_LABEL}</span>
+                <strong>{formattedCalculatedPrincipal}</strong>
+              </div>
+              <button className="secondary-button" onClick={onApplyCalculatedPrincipal} type="button">
+                {USE_CALCULATED_PRINCIPAL_LABEL}
+              </button>
+            </div>
+          ) : null}
+
+          {derivedPrincipalError ? <p className="inline-error">{derivedPrincipalError}</p> : null}
+        </details>
 
         <div className="section-head compact">
           <div>
@@ -98,7 +176,7 @@ export function SimulationForm({
                   inputMode="decimal"
                   min="0"
                   step="0.01"
-                  placeholder="5"
+                  placeholder="5.00"
                   type="number"
                   value={rate}
                   onChange={(event) => onYearlyRateChange(index, event.target.value)}
